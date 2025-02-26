@@ -1,3 +1,7 @@
+# Install Node.
+
+In this tutorial, we will install Node.js and npm on Ubuntu 24.04 via nvm.
+
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
 ```
