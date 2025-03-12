@@ -36,42 +36,39 @@ prompt = st.sidebar.text_area(
 aspect_ratio = st.sidebar.selectbox(
     "Aspect Ratio",
     options=[
-        "1:1 (Square)",
-        "4:3 (Standard)",
-        "16:9 (Widescreen)",
-        "9:16 (Portrait)",
-        "3:2 (Photo)",
-        "2:3 (Portrait Photo)",
+        "1:1 (1024x1024)",
+        "9:16 (768x1344)",
+        "3:4 (864x1152)",
+        "16:9 (1344x768)",
+        "4:3 (1152x864)",
+        "2:1 (1440x720)",
+        "1:2 (720x1440)",
         "Custom"
     ],
     index=0
 )
 
-# Define base resolution and calculate dimensions based on aspect ratio
-base_resolution = 1024
+# Define dimensions based on aspect ratio
 if aspect_ratio != "Custom":
-    if aspect_ratio == "1:1 (Square)":
-        width = height = base_resolution
-    elif aspect_ratio == "4:3 (Standard)":
-        width = base_resolution
-        height = int(base_resolution * (3/4))
-    elif aspect_ratio == "16:9 (Widescreen)":
-        width = base_resolution
-        height = int(base_resolution * (9/16))
-    elif aspect_ratio == "9:16 (Portrait)":
-        width = int(base_resolution * (9/16))
-        height = base_resolution
-    elif aspect_ratio == "3:2 (Photo)":
-        width = base_resolution
-        height = int(base_resolution * (2/3))
-    elif aspect_ratio == "2:3 (Portrait Photo)":
-        width = int(base_resolution * (2/3))
-        height = base_resolution
+    if aspect_ratio == "1:1 (1024x1024)":
+        width = height = 1024
+    elif aspect_ratio == "9:16 (768x1344)":
+        width, height = 768, 1344
+    elif aspect_ratio == "3:4 (864x1152)":
+        width, height = 864, 1152
+    elif aspect_ratio == "16:9 (1344x768)":
+        width, height = 1344, 768
+    elif aspect_ratio == "4:3 (1152x864)":
+        width, height = 1152, 864
+    elif aspect_ratio == "2:1 (1440x720)":
+        width, height = 1440, 720
+    elif aspect_ratio == "1:2 (720x1440)":
+        width, height = 720, 1440
 
 # Show custom width/height sliders only if Custom is selected
 if aspect_ratio == "Custom":
-    width = st.sidebar.select_slider("Width", options=[512, 768, 1024, 1280], value=1024)
-    height = st.sidebar.select_slider("Height", options=[512, 768, 1024, 1280], value=1024)
+    width = st.sidebar.select_slider("Width", options=[512, 768, 1024, 1280, 1344, 1440], value=1024)
+    height = st.sidebar.select_slider("Height", options=[512, 720, 768, 864, 1024, 1152, 1280, 1344, 1440], value=1024)
 else:
     # Display the calculated dimensions (read-only)
     st.sidebar.text(f"Width: {width}px")
@@ -83,6 +80,10 @@ num_images = st.sidebar.slider("Number of Images", min_value=1, max_value=4, val
 
 # Create two columns for main content and examples (moved up before image generation)
 main_col, example_col = st.columns([2, 1])
+
+# Initialize session state for storing images if not already present
+if 'generated_images' not in st.session_state:
+    st.session_state.generated_images = []
 
 # Generate button
 if st.sidebar.button("Generate Image"):
@@ -108,31 +109,12 @@ if st.sidebar.button("Generate Image"):
                 height=height,
             ).images
             
+            # Store images in session state
+            st.session_state.generated_images = images
+            
             # Update progress for post-processing
             progress_bar.progress(80)
             st.markdown("🎉 Adding final touches...")
-            
-            # Display images in main column with fixed width
-            with main_col:
-                for i, image in enumerate(images):
-                    # Calculate fixed width based on number of images
-                    fixed_width = min(width, 600)  # Max width of 400px
-                    st.image(image, caption=f"Generated Image {i+1}", width=fixed_width)
-                    
-                    # Save image button
-                    img_byte_arr = io.BytesIO()
-                    image.save(img_byte_arr, format='PNG')
-                    img_byte_arr = img_byte_arr.getvalue()
-                    
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"cogview4_{timestamp}_{i+1}.png"
-                    
-                    st.download_button(
-                        label="Download Image",
-                        data=img_byte_arr,
-                        file_name=filename,
-                        mime="image/png"
-                    )
             
             # Complete progress
             progress_bar.progress(100)
@@ -140,7 +122,30 @@ if st.sidebar.button("Generate Image"):
             
         except Exception as e:
             st.error(f"❌ Error generating image: {e}")
+
+# Display images from session state in main column
+with main_col:
+    if st.session_state.generated_images:
+        for i, image in enumerate(st.session_state.generated_images):
+            # Calculate fixed width based on number of images
+            fixed_width = min(width, 600)  # Max width of 600px
+            st.image(image, caption=f"Generated Image {i+1}", width=fixed_width)
             
+            # Save image button
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"cogview4_{timestamp}_{i+1}.png"
+            
+            st.download_button(
+                label="Download Image",
+                data=img_byte_arr,
+                file_name=filename,
+                mime="image/png"
+            )
+
 # Example prompts in right column (moved up)
 with example_col:
     st.markdown("### 📝 Prompt Examples")
