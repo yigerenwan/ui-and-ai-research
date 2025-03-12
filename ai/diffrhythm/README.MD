@@ -6,5 +6,5 @@
    ```
 2. Execute the inference script with the following command:
    ```
-   python3 infer.py
+   streamlit run infer.py
    ```
