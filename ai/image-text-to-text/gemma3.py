@@ -45,7 +45,7 @@ def load_model():
 model, processor = load_model()
 
 # Set up the Streamlit page
-st.title("Gemma-3 Image Chat")
+st.title("Gemma-3 Visual Chat")
 
 # Update the CSS to better position the chat input
 st.markdown("""
