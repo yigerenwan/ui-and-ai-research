@@ -5,7 +5,18 @@ import torch
 from threading import Thread
 import tempfile
 import os
-from moviepy.editor import VideoFileClip
+
+# Try to import moviepy, show installation instructions if not available
+try:
+    # Try different import paths for moviepy
+    try:
+        from moviepy.editor import VideoFileClip
+    except ImportError:
+        # Alternative import path
+        from moviepy.video.io.VideoFileClip import VideoFileClip
+    MOVIEPY_AVAILABLE = True
+except ImportError:
+    MOVIEPY_AVAILABLE = False
 
 # Page config
 st.set_page_config(page_title="Gemma-3 Image Chat", layout="wide")
@@ -23,7 +34,7 @@ def maintain_chat_history(messages, max_history=10):
 # Initialize model and processor FIRST
 @st.cache_resource
 def load_model():
-    model_id = "google/gemma-3-4b-it"
+    model_id = "google/gemma-3-12b-it"
     model = Gemma3ForConditionalGeneration.from_pretrained(
         model_id, device_map="auto"
     ).eval()
@@ -87,36 +98,65 @@ with main_container:
             uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
             if uploaded_file:
                 image = Image.open(uploaded_file)
-                st.image(image, caption="Uploaded Image", use_column_width=True)
+                st.image(image, caption="Uploaded Image", use_container_width=True)
                 media_for_model = image
         else:  # Video
-            uploaded_file = st.file_uploader("Choose a video...", type=["mp4", "mov", "avi"])
-            if uploaded_file:
-                # Save the uploaded video to a temporary file
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
-                    tmp_file.write(uploaded_file.getvalue())
-                    video_path = tmp_file.name
-                
-                # Display the video
-                st.video(uploaded_file)
-                
-                # Extract a frame from the video to use with the model
-                try:
-                    with VideoFileClip(video_path) as video:
-                        # Extract the middle frame
-                        frame_time = video.duration / 2
-                        frame = video.get_frame(frame_time)
-                        # Convert numpy array to PIL Image
-                        media_for_model = Image.fromarray(frame)
-                        st.image(media_for_model, caption="Frame extracted for analysis", use_column_width=True)
-                except Exception as e:
-                    st.error(f"Error processing video: {str(e)}")
-                
-                # Clean up the temporary file
-                try:
-                    os.unlink(video_path)
-                except:
-                    pass
+            if not MOVIEPY_AVAILABLE:
+                st.error("Video processing requires the moviepy package. Please install it with: `pip install moviepy`")
+                st.info("After installation, restart the application.")
+            else:
+                uploaded_file = st.file_uploader("Choose a video...", type=["mp4", "mov", "avi"])
+                if uploaded_file:
+                    # Save the uploaded video to a temporary file
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+                        tmp_file.write(uploaded_file.getvalue())
+                        video_path = tmp_file.name
+                    
+                    # Display the video
+                    st.video(uploaded_file)
+                    
+                    # Extract frames from the video
+                    try:
+                        with VideoFileClip(video_path) as video:
+                            # Get video duration
+                            duration = video.duration
+                            
+                            # Extract 9 frames from the video
+                            num_frames = 30
+                            
+                            # Extract frames at different points in the video
+                            frames = []
+                            frame_times = [duration * i / (num_frames + 1) for i in range(1, num_frames + 1)]
+                            
+                            st.write(f"Extracting {num_frames} frames for analysis")
+                            
+                            # Create a 3x3 grid for displaying frames
+                            cols = st.columns(3)
+                            
+                            for i, frame_time in enumerate(frame_times):
+                                frame = video.get_frame(frame_time)
+                                frame_image = Image.fromarray(frame)
+                                frames.append(frame_image)
+                                
+                                # Display in a 3x3 grid
+                                col_idx = i % 3
+                                with cols[col_idx]:
+                                    st.image(frame_image, caption=f"Frame {i+1} ({frame_time:.1f}s)", use_container_width=True)
+                            
+                            # Use the middle frame as the primary frame for the model
+                            media_for_model = frames[len(frames)//2]
+                            
+                            # Store all frames for potential use
+                            st.session_state.video_frames = frames
+                            
+                    except Exception as e:
+                        st.error(f"Error processing video: {str(e)}")
+                    
+                    # Clean up the temporary file
+                    try:
+                        os.unlink(video_path)
+                    except:
+                        pass
         
         context = st.text_area(
             "Context (optional, max 10000 words)",
@@ -157,7 +197,14 @@ with main_container:
 
                     # Add media to message content if uploaded
                     if uploaded_file and 'media_for_model' in locals():
+                        # For now, we can only send one image to the model
+                        # Most multimodal models only accept a single image per prompt
                         messages[-1]["content"].append({"type": "image", "image": media_for_model})
+                        
+                        # Add note about multiple frames if this is a video
+                        if media_type == "Video" and hasattr(st.session_state, 'video_frames') and len(st.session_state.video_frames) > 1:
+                            frame_note = f"This is a video with {len(st.session_state.video_frames)} key frames extracted. I'm analyzing the main frame (frame {len(st.session_state.video_frames)//2 + 1})."
+                            messages[-1]["content"].append({"type": "text", "text": frame_note})
                     
                     # Add context if provided
                     if context:
