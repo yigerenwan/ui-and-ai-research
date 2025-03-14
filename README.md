@@ -1,3 +1,3 @@
-# youtube-tutorials
+# ui-and-ai-research
 
-this is a test.
+This is a collection of UI and AI research projects.
