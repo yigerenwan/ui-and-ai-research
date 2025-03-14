@@ -3,6 +3,9 @@ from transformers import AutoProcessor, Gemma3ForConditionalGeneration, TextIter
 from PIL import Image
 import torch
 from threading import Thread
+import tempfile
+import os
+from moviepy.editor import VideoFileClip
 
 # Page config
 st.set_page_config(page_title="Gemma-3 Image Chat", layout="wide")
@@ -78,10 +81,42 @@ with main_container:
 
     with col1:
         # Left column content
-        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-        if uploaded_file:
-            image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image", use_column_width=True)
+        media_type = st.radio("Select media type:", ["Image", "Video"])
+        
+        if media_type == "Image":
+            uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+            if uploaded_file:
+                image = Image.open(uploaded_file)
+                st.image(image, caption="Uploaded Image", use_column_width=True)
+                media_for_model = image
+        else:  # Video
+            uploaded_file = st.file_uploader("Choose a video...", type=["mp4", "mov", "avi"])
+            if uploaded_file:
+                # Save the uploaded video to a temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+                    tmp_file.write(uploaded_file.getvalue())
+                    video_path = tmp_file.name
+                
+                # Display the video
+                st.video(uploaded_file)
+                
+                # Extract a frame from the video to use with the model
+                try:
+                    with VideoFileClip(video_path) as video:
+                        # Extract the middle frame
+                        frame_time = video.duration / 2
+                        frame = video.get_frame(frame_time)
+                        # Convert numpy array to PIL Image
+                        media_for_model = Image.fromarray(frame)
+                        st.image(media_for_model, caption="Frame extracted for analysis", use_column_width=True)
+                except Exception as e:
+                    st.error(f"Error processing video: {str(e)}")
+                
+                # Clean up the temporary file
+                try:
+                    os.unlink(video_path)
+                except:
+                    pass
         
         context = st.text_area(
             "Context (optional, max 10000 words)",
@@ -120,9 +155,9 @@ with main_container:
                         }
                     ]
 
-                    # Add image to message content if uploaded
-                    if uploaded_file:
-                        messages[-1]["content"].append({"type": "image", "image": image})
+                    # Add media to message content if uploaded
+                    if uploaded_file and 'media_for_model' in locals():
+                        messages[-1]["content"].append({"type": "image", "image": media_for_model})
                     
                     # Add context if provided
                     if context:
