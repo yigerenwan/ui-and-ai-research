@@ -4,7 +4,11 @@
    ```
    pip install -r requirements.txt
    ```
-2. Execute the inference script with the following command:
+2. Install streamlit
+   ```
+   pip install streamlit
+   ```
+3. Execute the inference script with the following command:
    ```
    streamlit run infer.py
    ```
