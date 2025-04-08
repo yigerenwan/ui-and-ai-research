@@ -44,10 +44,6 @@ In the model zoo of MV-Adapter, running image-to-multiview generation has the hi
 python -m scripts.gradio_demo_t2mv --base_model "stabilityai/stable-diffusion-xl-base-1.0"
 ```
 
-![demo_t2mv_1](assets/doc/demo_t2mv_1.png)
-
-![demo_t2mv_2](assets/doc/demo_t2mv_2.png)
-
 > Reminder: When switching the demo to another base model, delete the `gradio_cached_examples` directory, otherwise it will affect the examples results of the next demo.
 
 **With anime-themed <a href="https://huggingface.co/cagliostrolab/animagine-xl-3.1" target="_blank">Animagine XL 3.1</a>:**
@@ -56,17 +52,12 @@ python -m scripts.gradio_demo_t2mv --base_model "stabilityai/stable-diffusion-xl
 python -m scripts.gradio_demo_t2mv --base_model "cagliostrolab/animagine-xl-3.1"
 ```
 
-![demo_t2mv_anime_1](assets/doc/demo_t2mv_anime_1.png)
-
-![demo_t2mv_anime_2](assets/doc/demo_t2mv_anime_2.png)
-
 **With general <a href="https://huggingface.co/Lykon/dreamshaper-xl-1-0" target="_blank">Dreamshaper</a>:**
 
 ```Bash
 python -m scripts.gradio_demo_t2mv --base_model "Lykon/dreamshaper-xl-1-0" --scheduler ddpm
 ```
 
-![demo_t2mv_dreamshaper_1](assets/doc/demo_t2mv_dreamshaper_1.png)
 
 You can also specify a new diffusers-format text-to-image diffusion model using `--base_model`. Note that it should be the model name in huggingface, such as `stabilityai/stable-diffusion-xl-base-1.0`, or a local path refer to a text-to-image pipeline directory. Note that if you specify `latent-consistency/lcm-sdxl` to use latent consistency models, please add `--scheduler lcm` to the command.
 
@@ -77,10 +68,6 @@ You can also specify a new diffusers-format text-to-image diffusion model using 
 ```Bash
 python -m scripts.gradio_demo_i2mv
 ```
-
-![demo_i2mv_1](assets/doc/demo_i2mv_1.png)
-
-![demo_i2mv_2](assets/doc/demo_i2mv_2.png)
 
 ### Inference Scripts
 
@@ -222,7 +209,6 @@ python -m scripts.inference_tg2mv_sdxl \
 --text "Mater, a rusty and beat-up tow truck from the 2006 Disney/Pixar animated film 'Cars', with a rusty brown exterior, big blue eyes."
 ```
 
-![tg2mv_example_out](assets/demo/tg2mv/ac9d4e4f44f34775ad46878ba8fbfd86_mv.png)
 
 ```Bash
 python -m scripts.inference_tg2mv_sdxl \
@@ -254,49 +240,3 @@ python -m scripts.inference_ig2mv_partial_sdxl \
 --output output.png
 ```
 
-Example input:
-<img src="assets/demo/ig2mv/cartoon_style_table.png" alt="partial input" style="width: 20%">
-
-Example output:
-![example_partial_ig2mv](assets/demo/ig2mv/cartoon_style_table_mv.png)
-
-The above command will save a `*_transform.json` file in the output dir, which contains transformation information like this:
-```json
-{
-    "offset": [
-        0.7446051140100826,
-        -0.3421213991056582,
-        0.1360104325533671
-    ],
-    "scale": 1.0086087120792668
-}
-```
-
-You can use it to transform your mesh into the canonical space, map the generated multi-view images onto the mesh, and then re-transform the mesh back to the original spatial position.
-
-### ComfyUI
-
-Please check <a href="https://github.com/huanngzh/ComfyUI-MVAdapter" target="_blank">ComfyUI-MVAdapter Repo</a> for details.
-
-**Text to Multiview Generation**
-
-![comfyui_t2mv](assets/doc/comfyui_t2mv.png)
-
-**Text to Multiview Generation with LoRA**
-
-![comfyui_t2mv_lora](assets/doc/comfyui_t2mv_lora.png)
-
-**Image to Multiview Generation**
-
-![comfyui_i2mv](assets/doc/comfyui_i2mv.png)
-
-## Citation
-
-```
-@article{huang2024mvadapter,
-  title={MV-Adapter: Multi-view Consistent Image Generation Made Easy},
-  author={Huang, Zehuan and Guo, Yuanchen and Wang, Haoran and Yi, Ran and Ma, Lizhuang and Cao, Yan-Pei and Sheng, Lu},
-  journal={arXiv preprint arXiv:2412.03632},
-  year={2024}
-}
-```
