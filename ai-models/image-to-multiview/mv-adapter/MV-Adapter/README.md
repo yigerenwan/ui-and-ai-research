@@ -227,8 +227,6 @@ python -m scripts.inference_ig2mv_sdxl \
 --output output.png --remove_bg
 ```
 
-![example_ig2mv_out](assets/demo/ig2mv/1ccd5c1563ea4f5fb8152eac59dabd5c_mv.png)
-
 #### Partial Image + Geometry to Multiview
 
 **With SDXL:**
