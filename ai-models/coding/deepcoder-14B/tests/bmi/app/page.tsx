@@ -1,103 +1,149 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // State hooks for managing input values and results.
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
+  const [bmi, setBmi] = useState(null);
+  const [category, setCategory] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // Function to determine health tips based on BMI category.
+  const getHealthTips = (bmiCategory) => {
+    switch (bmiCategory) {
+      case 'Underweight':
+        return (
+          <>
+            <p>Consider incorporating nutrient-dense foods into your meals.</p>
+            <p>Include lean proteins, whole grains, healthy fats, and frequent snacks.</p>
+            <p>If underweight is a concern, consult a nutritionist for personalized advice.</p>
+          </>
+        );
+      case 'Normal weight':
+        return (
+          <>
+            <p>Keep up the good work with a balanced diet.</p>
+            <p>Focus on a variety of fruits, vegetables, lean proteins, and whole grains.</p>
+            <p>Maintain an active lifestyle for overall health and wellbeing.</p>
+          </>
+        );
+      case 'Overweight':
+        return (
+          <>
+            <p>Focus on reducing refined sugars and saturated fats.</p>
+            <p>Increase your intake of vegetables, fruits, and lean proteins.</p>
+            <p>Consider moderate exercise to support a healthy weight loss journey.</p>
+          </>
+        );
+      case 'Obesity':
+        return (
+          <>
+            <p>It may help to adopt a lower-calorie, nutrient-dense diet.</p>
+            <p>Increase whole foods like vegetables and fruits while minimizing processed foods.</p>
+            <p>Consult with health professionals for a tailored plan.</p>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Function to calculate BMI and determine the category.
+  const calculateBMI = (event) => {
+    event.preventDefault();
+
+    // Ensure input values are provided and convert height from centimeters to meters.
+    if (weight && height) {
+      const heightInMeters = height / 100;
+      const bmiValue = weight / (heightInMeters * heightInMeters);
+
+      // Update state with BMI value (rounded to 2 decimals).
+      setBmi(bmiValue.toFixed(2));
+
+      // Determine BMI category based on standard ranges.
+      if (bmiValue < 18.5) {
+        setCategory('Underweight');
+      } else if (bmiValue >= 18.5 && bmiValue < 25) {
+        setCategory('Normal weight');
+      } else if (bmiValue >= 25 && bmiValue < 30) {
+        setCategory('Overweight');
+      } else {
+        setCategory('Obesity');
+      }
+    }
+  };
+
+  // Reset function to clear inputs and results.
+  const resetCalculator = () => {
+    setWeight('');
+    setHeight('');
+    setBmi(null);
+    setCategory('');
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f6d365] to-[#fda085] font-sans">
+      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+        <h1 className="text-center text-2xl font-bold text-gray-800 mb-6">BMI Calculator</h1>
+        <form onSubmit={calculateBMI}>
+          <div className="mb-4">
+            <label htmlFor="weight" className="block mb-2 font-medium">
+              Weight (kg):
+            </label>
+            <input
+              type="number"
+              id="weight"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="e.g. 70"
+              required
+              className="w-full p-3 text-base rounded border border-gray-300 outline-none transition duration-300 focus:border-[#fda085]"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="height" className="block mb-2 font-medium">
+              Height (cm):
+            </label>
+            <input
+              type="number"
+              id="height"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="e.g. 170"
+              required
+              className="w-full p-3 text-base rounded border border-gray-300 outline-none transition duration-300 focus:border-[#fda085]"
+            />
+          </div>
+          <div className="flex justify-center mt-4">
+            <button
+              type="submit"
+              className="px-6 py-3 rounded bg-[#fda085] text-white mr-2 hover:bg-[#f6a07a] transition duration-300"
+            >
+              Calculate BMI
+            </button>
+            <button
+              type="button"
+              onClick={resetCalculator}
+              className="px-6 py-3 rounded bg-gray-300 text-gray-800 hover:bg-gray-400 transition duration-300"
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+
+        {bmi && (
+          <div className="mt-6 text-center p-4 border-t border-gray-200">
+            <h2 className="text-xl font-semibold">Your BMI is: {bmi}</h2>
+            <p className="mt-2">Category: {category}</p>
+            <div className="mt-4 text-left">
+              <h3 className="text-lg font-bold">Health & Diet Tips:</h3>
+              {getHealthTips(category)}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
